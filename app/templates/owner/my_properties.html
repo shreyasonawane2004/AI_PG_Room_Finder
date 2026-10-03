@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}My Properties | RoomFinder AI{% endblock %}
+
+{% block content %}
+<div class="container section">
+    <div class="dashboard-header">
+        <div>
+            <h1>Manage My Listings</h1>
+            <p>View, update, and monitor the live approval status of your PG and room listings.</p>
+        </div>
+        <a href="{{ url_for('owner.add_property') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Listing
+        </a>
+    </div>
+
+    {% if properties %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Type / Gender</th>
+                        <th>City / Address</th>
+                        <th>Rooms / Beds</th>
+                        <th>Rent Range</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in properties %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                                    <img src="{{ p.cover_image or 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80' }}"
+                                         style="width: 60px; height: 45px; border-radius: var(--radius-sm); object-fit: cover;">
+                                    <div>
+                                        <strong style="color: #ffffff;">{{ p.title }}</strong>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">Listed on {{ p.created_at }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ p.gender_preference }}">{{ p.gender_preference }}</span>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 0.2rem;">
+                                    {{ p.property_type }}
+                                </div>
+                            </td>
+                            <td>{{ p.landmark or p.address_line }}, {{ p.city }}</td>
+                            <td>
+                                <strong>{{ p.room_count }}</strong> Rooms
+                                <div style="font-size: 0.75rem; color: var(--accent);">{{ p.total_available_beds }} Beds Available</div>
+                            </td>
+                            <td>
+                                ₹{{ "{:,.0f}".format(p.min_price) }} - ₹{{ "{:,.0f}".format(p.max_price) }}
+                            </td>
+                            <td>
+                                <span class="status-chip status-{{ p.status }}">
+                                    {{ p.status.replace('_', ' ') }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if p.status == 'approved' %}
+                                    <a href="{{ url_for('tenant.property_detail', slug=p.slug) }}" class="btn btn-secondary btn-sm" target="_blank">
+                                        <i class="fas fa-eye"></i> View Live
+                                    </a>
+                                {% else %}
+                                    <span style="font-size: 0.8rem; color: var(--text-muted);">Under Review</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="glass-panel" style="padding: 3rem; text-align: center; border-radius: var(--radius-lg);">
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">No properties listed yet.</p>
+            <a href="{{ url_for('owner.add_property') }}" class="btn btn-primary">Add Your First Listing</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

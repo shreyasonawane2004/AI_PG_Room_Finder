@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In | AI-Powered PG & Room Finder{% endblock %}
+
+{% block content %}
+<div class="container section" style="min-height: 75vh; display: flex; align-items: center; justify-content: center;">
+    <div class="glass-panel" style="max-width: 480px; width: 100%; padding: 2.5rem; border-radius: var(--radius-lg);">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div class="brand-icon" style="margin: 0 auto 1rem; width: 48px; height: 48px; font-size: 1.4rem;">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.4rem;">Welcome Back</h1>
+            <p style="font-size: 0.9rem;">Sign in to manage your bookings, listings, or account.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" id="login-form">
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="name@example.com" value="{{ email or '' }}" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="password" class="form-label">Password</label>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Default: password123</span>
+                </div>
+                <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" id="login-submit-btn">
+                <i class="fas fa-arrow-right-to-bracket"></i> Sign In
+            </button>
+        </form>
+
+        <!-- Demo Accounts Quick Switcher for Easy Evaluation -->
+        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+            <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 0.75rem;">
+                <i class="fas fa-key"></i> Quick Demo Login Credentials (password: <code>password123</code>):
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.8rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fillCredentials('admin@roomfinder.com', 'password123')" style="justify-content: flex-start;">
+                    <span class="role-pill role-admin">Admin</span> admin@roomfinder.com
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fillCredentials('rajesh.owner@example.com', 'password123')" style="justify-content: flex-start;">
+                    <span class="role-pill role-owner">Owner</span> rajesh.owner@example.com
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fillCredentials('amit.tenant@example.com', 'password123')" style="justify-content: flex-start;">
+                    <span class="role-pill role-tenant">Tenant</span> amit.tenant@example.com
+                </button>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
+            Don't have an account yet? <a href="{{ url_for('auth.register') }}" style="font-weight: 600;">Create Account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function fillCredentials(email, password) {
+        document.getElementById('email').value = email;
+        document.getElementById('password').value = password;
+    }
+</script>
+{% endblock %}

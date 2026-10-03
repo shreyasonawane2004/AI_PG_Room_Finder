@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Users | Admin RoomFinder AI{% endblock %}
+
+{% block content %}
+<div class="container section">
+    <div class="dashboard-header">
+        <div>
+            <h1>User & Owner Moderation</h1>
+            <p>View registered accounts, verify roles, and toggle platform access.</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Account</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                    <tr>
+                        <td>
+                            <strong style="color: #ffffff;">{{ u.full_name }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">ID: #{{ u.id }}</div>
+                        </td>
+                        <td>{{ u.email }}</td>
+                        <td>{{ u.phone }}</td>
+                        <td>
+                            <span class="role-pill role-{{ u.role }}">{{ u.role }}</span>
+                        </td>
+                        <td>
+                            {% if u.is_active %}
+                                <span class="status-chip status-active">Active</span>
+                            {% else %}
+                                <span class="status-chip status-inactive">Suspended</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.role != 'admin' %}
+                                <form action="{{ url_for('admin.toggle_user_status', user_id=u.id) }}" method="POST">
+                                    {% if u.is_active %}
+                                        <input type="hidden" name="is_active" value="0">
+                                        <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);">
+                                            <i class="fas fa-ban"></i> Suspend
+                                        </button>
+                                    {% else %}
+                                        <input type="hidden" name="is_active" value="1">
+                                        <button type="submit" class="btn btn-accent btn-sm">
+                                            <i class="fas fa-user-check"></i> Activate
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            {% else %}
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Protected</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

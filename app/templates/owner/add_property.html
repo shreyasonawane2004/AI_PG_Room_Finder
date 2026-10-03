@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}List New Property | RoomFinder AI{% endblock %}
+
+{% block content %}
+<div class="container section" style="max-width: 900px;">
+    <div class="dashboard-header">
+        <div>
+            <h1>List a New PG or Room</h1>
+            <p>Fill in details, pinpoint exact coordinates with our Leaflet map pin picker, and submit for verification.</p>
+        </div>
+        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="glass-panel" style="padding: 2.5rem; border-radius: var(--radius-lg);">
+        <form method="POST" action="{{ url_for('owner.add_property') }}" id="add-property-form">
+            <!-- Step 1: Basic Information -->
+            <div style="margin-bottom: 2.5rem;">
+                <h3 style="font-size: 1.25rem; margin-bottom: 1.25rem; color: #ffffff; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="brand-icon" style="width: 28px; height: 28px; font-size: 0.85rem;">1</span>
+                    Basic Property Information
+                </h3>
+
+                <div class="form-group">
+                    <label for="title" class="form-label">Property Title *</label>
+                    <input type="text" name="title" id="title" class="form-control" placeholder="e.g. Greenfield Luxury PG for Men" required>
+                </div>
+
+                <div class="grid-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="property_type" class="form-label">Property Category</label>
+                        <select name="property_type" id="property_type" class="form-control">
+                            <option value="pg">Paying Guest (PG)</option>
+                            <option value="hostel">Student Hostel</option>
+                            <option value="independent_room">Independent Room</option>
+                            <option value="flat">Shared Flat / Apartment</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender_preference" class="form-label">Gender Preference</label>
+                        <select name="gender_preference" id="gender_preference" class="form-control">
+                            <option value="unisex">Co-living (Unisex / All)</option>
+                            <option value="female">Girls / Women Only</option>
+                            <option value="male">Boys / Men Only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">Detailed Description</label>
+                    <textarea name="description" id="description" class="form-control" placeholder="Highlight connectivity, room condition, security, and house rules..."></textarea>
+                </div>
+            </div>
+
+            <!-- Step 2: Location & Leaflet Interactive Pin Picker -->
+            <div style="margin-bottom: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+                <h3 style="font-size: 1.25rem; margin-bottom: 1.25rem; color: #ffffff; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="brand-icon" style="width: 28px; height: 28px; font-size: 0.85rem;">2</span>
+                    Location & Map Coordinates
+                </h3>
+
+                <div class="grid-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="address_line" class="form-label">Address Line *</label>
+                        <input type="text" name="address_line" id="address_line" class="form-control" placeholder="#42, 12th Main Road" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="landmark" class="form-label">Landmark / Tech Park</label>
+                        <input type="text" name="landmark" id="landmark" class="form-control" placeholder="Near Sony World Signal or Metro Station">
+                    </div>
+                </div>
+
+                <div class="grid-3" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="city" class="form-label">City *</label>
+                        <input type="text" name="city" id="city" class="form-control" value="Bangalore" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="state" class="form-label">State</label>
+                        <input type="text" name="state" id="state" class="form-control" value="Karnataka">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pincode" class="form-label">Pincode</label>
+                        <input type="text" name="pincode" id="pincode" class="form-control" placeholder="560034">
+                    </div>
+                </div>
+
+                <!-- Leaflet Coordinate Picker -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-map-pin" style="color: var(--secondary);"></i> Pinpoint Accurate Location on Map (Drag the Pin)
+                    </label>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                        Click or drag the marker to your exact building entrance. Tenants will see this on the live search map.
+                    </p>
+                    <div id="leaflet-picker-map"></div>
+                </div>
+
+                <div class="grid-2" style="gap: 1rem; margin-top: 0.75rem;">
+                    <div class="form-group">
+                        <label for="latitude" class="form-label">Latitude</label>
+                        <input type="text" name="latitude" id="latitude" class="form-control" value="12.97160000" readonly style="background: rgba(0,0,0,0.2);">
+                    </div>
+                    <div class="form-group">
+                        <label for="longitude" class="form-label">Longitude</label>
+                        <input type="text" name="longitude" id="longitude" class="form-control" value="77.59460000" readonly style="background: rgba(0,0,0,0.2);">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Room Inventory -->
+            <div style="margin-bottom: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+                <h3 style="font-size: 1.25rem; margin-bottom: 1.25rem; color: #ffffff; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="brand-icon" style="width: 28px; height: 28px; font-size: 0.85rem;">3</span>
+                    Initial Room Sharing Configuration
+                </h3>
+
+                <div class="grid-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="initial_room_type" class="form-label">Room Type</label>
+                        <select name="initial_room_type" id="initial_room_type" class="form-control">
+                            <option value="single">Single Sharing (Private Room)</option>
+                            <option value="double_sharing" selected>Double Sharing (2 Beds)</option>
+                            <option value="triple_sharing">Triple Sharing (3 Beds)</option>
+                            <option value="four_sharing">Four Sharing (4 Beds)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="initial_total_beds" class="form-label">Total Beds Available</label>
+                        <input type="number" name="initial_total_beds" id="initial_total_beds" class="form-control" value="4" min="1" required>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="initial_monthly_rent" class="form-label">Monthly Rent per Bed (₹) *</label>
+                        <input type="number" name="initial_monthly_rent" id="initial_monthly_rent" class="form-control" value="9500" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="initial_deposit" class="form-label">Security Deposit (₹)</label>
+                        <input type="number" name="initial_deposit" id="initial_deposit" class="form-control" value="15000">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+                        <input type="checkbox" name="initial_has_ac" value="1">
+                        <span>Includes Air Conditioning (AC)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+                        <input type="checkbox" name="initial_has_bath" value="1" checked>
+                        <span>Attached Bathroom</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Step 4: Amenities & House Rules -->
+            <div style="margin-bottom: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+                <h3 style="font-size: 1.25rem; margin-bottom: 1.25rem; color: #ffffff; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="brand-icon" style="width: 28px; height: 28px; font-size: 0.85rem;">4</span>
+                    Amenities & Facilities Checklist
+                </h3>
+
+                <div class="option-cards-grid" style="grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); margin-bottom: 1.5rem;">
+                    {% for amenity in amenities %}
+                        <label class="option-card-label" style="flex-direction: row; justify-content: flex-start; text-align: left; padding: 0.65rem 0.85rem;">
+                            <input type="checkbox" name="amenities" value="{{ amenity.id }}" {% if loop.index <= 6 %}checked{% endif %}>
+                            <i class="fas {{ amenity.icon_code or 'fa-check' }}" style="color: var(--primary);"></i>
+                            <span style="font-size: 0.8rem; font-weight: 600;">{{ amenity.name }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+
+                <div class="grid-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="food_type" class="form-label">Food & Meals</label>
+                        <select name="food_type" id="food_type" class="form-control" onchange="document.getElementById('food_available_cb').checked = (this.value !== 'none');">
+                            <option value="both" selected>3 Meals Included (Veg & Non-Veg)</option>
+                            <option value="veg">Vegetarian Meals Only</option>
+                            <option value="none">Self Cooking / No Food</option>
+                        </select>
+                        <input type="hidden" name="food_available" id="food_available_cb" value="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gate_closing_time" class="form-label">Gate Closing Curfew</label>
+                        <input type="text" name="gate_closing_time" id="gate_closing_time" class="form-control" value="11:00 PM">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="rules_and_regulations" class="form-label">House Rules & Restrictions</label>
+                    <input type="text" name="rules_and_regulations" id="rules_and_regulations" class="form-control" placeholder="e.g. No loud music after 11 PM. Guests permitted in visitor lounge.">
+                </div>
+            </div>
+
+            <!-- Step 5: Photos -->
+            <div style="margin-bottom: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+                <h3 style="font-size: 1.25rem; margin-bottom: 1.25rem; color: #ffffff; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="brand-icon" style="width: 28px; height: 28px; font-size: 0.85rem;">5</span>
+                    Cover Photo
+                </h3>
+
+                <div class="form-group">
+                    <label for="cover_image_url" class="form-label">Photo Image URL</label>
+                    <input type="url" name="cover_image_url" id="cover_image_url" class="form-control" placeholder="https://images.unsplash.com/..." value="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80">
+                    <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.35rem;">
+                        Paste an image URL from Unsplash or your image host. A default verified placeholder is prefilled.
+                    </small>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" id="submit-property-btn">
+                <i class="fas fa-check-circle"></i> Submit Listing for Verification
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/location_picker.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Leaflet Location Drag & Drop Pin Picker
+        initLocationPicker('leaflet-picker-map', 'latitude', 'longitude', 12.9716, 77.5946);
+    });
+</script>
+{% endblock %}

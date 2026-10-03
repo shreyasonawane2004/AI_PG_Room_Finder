@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Search PGs & Rooms | Interactive Map | AI-Powered RoomFinder{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding-top: 1.5rem;">
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <form method="GET" action="{{ url_for('tenant.search') }}" id="search-filter-form" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; width: 100%;">
+            <!-- Natural language or text query -->
+            <div style="flex: 1.5; min-width: 220px;">
+                <input type="text"
+                       name="nl_query"
+                       class="form-control"
+                       placeholder="Natural language search or landmark..."
+                       value="{{ nl_query or '' }}">
+            </div>
+
+            <!-- City -->
+            <div style="flex: 1; min-width: 140px;">
+                <select name="city" class="form-control">
+                    <option value="">All Locations</option>
+                    <option value="Bangalore" {% if current_filters.get('city') == 'Bangalore' %}selected{% endif %}>Bangalore</option>
+                    <option value="Koramangala" {% if current_filters.get('city') == 'Koramangala' %}selected{% endif %}>Koramangala</option>
+                    <option value="HSR Layout" {% if current_filters.get('city') == 'HSR Layout' %}selected{% endif %}>HSR Layout</option>
+                    <option value="Whitefield" {% if current_filters.get('city') == 'Whitefield' %}selected{% endif %}>Whitefield</option>
+                    <option value="Pune" {% if current_filters.get('city') == 'Pune' %}selected{% endif %}>Pune</option>
+                    <option value="Hinjewadi" {% if current_filters.get('city') == 'Hinjewadi' %}selected{% endif %}>Hinjewadi</option>
+                    <option value="Hyderabad" {% if current_filters.get('city') == 'Hyderabad' %}selected{% endif %}>Hyderabad</option>
+                </select>
+            </div>
+
+            <!-- Gender -->
+            <div style="min-width: 130px;">
+                <select name="gender" class="form-control">
+                    <option value="">Any Gender</option>
+                    <option value="female" {% if current_filters.get('gender') == 'female' %}selected{% endif %}>Girls PG</option>
+                    <option value="male" {% if current_filters.get('gender') == 'male' %}selected{% endif %}>Boys PG</option>
+                    <option value="unisex" {% if current_filters.get('gender') == 'unisex' %}selected{% endif %}>Co-living</option>
+                </select>
+            </div>
+
+            <!-- Sharing Type -->
+            <div style="min-width: 140px;">
+                <select name="sharing" class="form-control">
+                    <option value="">All Sharing</option>
+                    <option value="single" {% if current_filters.get('sharing') == 'single' %}selected{% endif %}>Single Bed</option>
+                    <option value="double_sharing" {% if current_filters.get('sharing') == 'double_sharing' %}selected{% endif %}>Double (2-Sharing)</option>
+                    <option value="triple_sharing" {% if current_filters.get('sharing') == 'triple_sharing' %}selected{% endif %}>Triple (3-Sharing)</option>
+                </select>
+            </div>
+
+            <!-- Max Budget -->
+            <div style="min-width: 140px;">
+                <input type="number"
+                       name="max_budget"
+                       class="form-control"
+                       placeholder="Max Budget (₹)"
+                       value="{{ current_filters.get('max_budget') or '' }}">
+            </div>
+
+            <!-- Sort -->
+            <div style="min-width: 140px;">
+                <select name="sort" class="form-control">
+                    <option value="recommended">AI Recommended</option>
+                    <option value="price_low" {% if current_filters.get('sort') == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_high" {% if current_filters.get('sort') == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                    <option value="rating" {% if current_filters.get('sort') == 'rating' %}selected{% endif %}>Highest Rated</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="apply-filters-btn">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+            <a href="{{ url_for('tenant.search') }}" class="btn btn-secondary btn-sm" title="Reset Filters">
+                <i class="fas fa-rotate-left"></i>
+            </a>
+        </form>
+    </div>
+
+    <!-- AI Extracted Query Insight Banner -->
+    {% if ai_parsed and ai_parsed.get('extracted_tags') %}
+        <div style="background: rgba(99, 102, 241, 0.12); border: 1px solid var(--border-accent); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                <span class="badge badge-ai"><i class="fas fa-wand-magic-sparkles"></i> AI Filter Active</span>
+                <span style="font-size: 0.875rem; color: #ffffff;">{{ ai_parsed.summary }}</span>
+            </div>
+            <a href="{{ url_for('tenant.search') }}" style="font-size: 0.8rem; color: var(--secondary);">Clear AI filters &times;</a>
+        </div>
+    {% endif %}
+
+    <!-- Dual Panel Layout: Listing Cards + Live Leaflet Map -->
+    <div class="map-split-container">
+        <!-- Left: Scrollable Property Cards -->
+        <div class="listings-scrollable">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <span style="font-size: 0.95rem; color: var(--text-secondary);">
+                    Showing <strong style="color: #ffffff;">{{ properties|length }}</strong> accommodations
+                </span>
+                <div style="display: flex; gap: 0.4rem;">
+                    <span class="badge" style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted);">
+                        <i class="fas fa-map-pin"></i> OpenStreetMap Synced
+                    </span>
+                </div>
+            </div>
+
+            {% if properties %}
+                <div class="grid-2" style="gap: 1.25rem;">
+                    {% for prop in properties %}
+                        {% include 'components/property_card.html' %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="glass-panel" style="padding: 3rem; text-align: center; border-radius: var(--radius-lg); margin-top: 2rem;">
+                    <i class="fas fa-magnifying-glass-location" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                    <h3 style="margin-bottom: 0.5rem;">No exact matching PGs found</h3>
+                    <p style="margin-bottom: 1.5rem;">Try relaxing your budget, gender, or sharing criteria to see more options.</p>
+                    <a href="{{ url_for('tenant.search') }}" class="btn btn-secondary">
+                        <i class="fas fa-rotate-left"></i> View All PGs
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Leaflet Interactive Map -->
+        <div class="map-wrapper">
+            <div id="leaflet-search-map"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Serialize property list for Leaflet pins
+        const propertyList = [
+            {% for p in properties %}
+                {
+                    id: {{ p.id }},
+                    title: "{{ p.title|replace('"', '\\"') }}",
+                    slug: "{{ p.slug }}",
+                    latitude: {{ p.latitude }},
+                    longitude: {{ p.longitude }},
+                    min_price: {{ p.min_price }},
+                    cover_image: "{{ p.cover_image }}",
+                    avg_rating: {{ p.avg_rating or 0.0 }}
+                }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // Initialize Leaflet Map
+        initSearchMap('leaflet-search-map', propertyList);
+    });
+</script>
+{% endblock %}

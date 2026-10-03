@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Listings | Admin RoomFinder AI{% endblock %}
+
+{% block content %}
+<div class="container section">
+    <div class="dashboard-header">
+        <div>
+            <h1>Listing Verification Queue</h1>
+            <p>Ensure high quality standards by approving or rejecting newly submitted properties.</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Admin Dashboard
+        </a>
+    </div>
+
+    {% if pending_properties %}
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            {% for prop in pending_properties %}
+                <div class="glass-panel" style="padding: 2rem; border-radius: var(--radius-lg);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.35rem;">
+                                <span class="badge badge-{{ prop.gender_preference }}">{{ prop.gender_preference }}</span>
+                                <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-secondary); text-transform: uppercase;">{{ prop.property_type }}</span>
+                            </div>
+                            <h2 style="font-size: 1.5rem; color: #ffffff;">{{ prop.title }}</h2>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">
+                                <i class="fas fa-location-dot"></i> {{ prop.address_line }}, {{ prop.city }} (Landmark: {{ prop.landmark }})
+                            </p>
+                        </div>
+
+                        <div style="text-align: right;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Owner Contact</span>
+                            <div style="font-weight: 700; color: #ffffff;">{{ prop.owner_name }}</div>
+                            <div style="font-size: 0.85rem; color: var(--accent);">{{ prop.owner_phone }}</div>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.95rem; margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
+                        {{ prop.description }}
+                    </p>
+
+                    <div style="background: var(--bg-surface-elevated); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: flex; gap: 2rem; flex-wrap: wrap;">
+                        <div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Rent Range</span>
+                            <div style="font-weight: 700; color: #ffffff;">₹{{ "{:,.0f}".format(prop.min_price) }} - ₹{{ "{:,.0f}".format(prop.max_price) }}</div>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Curfew</span>
+                            <div style="font-weight: 700; color: #ffffff;">{{ prop.gate_closing_time }}</div>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Coordinates</span>
+                            <div style="font-weight: 700; color: var(--secondary);">{{ prop.latitude }}, {{ prop.longitude }}</div>
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('admin.verify_action', property_id=prop.id) }}" method="POST" style="display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem;">
+                        <input type="text" name="rejection_reason" class="form-control" placeholder="Reason (if rejecting)..." style="max-width: 320px;">
+                        <button type="submit" name="action" value="rejected" class="btn btn-secondary" style="color: var(--danger);">
+                            <i class="fas fa-xmark"></i> Reject Listing
+                        </button>
+                        <button type="submit" name="action" value="approved" class="btn btn-primary">
+                            <i class="fas fa-check"></i> Approve & Publish
+                        </button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="glass-panel" style="padding: 3.5rem; text-align: center; border-radius: var(--radius-lg);">
+            <i class="fas fa-check-double" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
+            <h3>No Pending Listings</h3>
+            <p>All owner property submissions have been reviewed.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

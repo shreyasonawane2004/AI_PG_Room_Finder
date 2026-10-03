@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ prop.title }} | AI-Powered RoomFinder{% endblock %}
+
+{% block content %}
+<div class="container section" style="padding-top: 2rem;">
+    <!-- Breadcrumb & Top Bar -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">
+            <a href="{{ url_for('tenant.home') }}">Home</a>
+            <span>/</span>
+            <a href="{{ url_for('tenant.search') }}?city={{ prop.city }}">{{ prop.city }}</a>
+            <span>/</span>
+            <span style="color: var(--text-primary);">{{ prop.title }}</span>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button class="card-favorite-btn {% if is_saved %}saved{% endif %}"
+                    style="position: static; width: auto; height: auto; border-radius: var(--radius-md); padding: 0.5rem 1rem; gap: 0.5rem;"
+                    data-property-id="{{ prop.id }}">
+                <i class="{% if is_saved %}fas{% else %}far{% endif %} fa-heart"></i>
+                <span style="font-size: 0.85rem; font-weight: 600;">Save</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Media Gallery & Main Overview -->
+    <div class="grid-2" style="grid-template-columns: 1.25fr 0.75fr; gap: 2rem; margin-bottom: 3rem;">
+        <!-- Left: Image Gallery -->
+        <div>
+            <div style="width: 100%; height: 380px; border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-surface-elevated); margin-bottom: 1rem; border: 1px solid var(--border-subtle);">
+                <img id="main-gallery-img"
+                     src="{{ prop.images[0].image_url if prop.images else 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80' }}"
+                     alt="{{ prop.title }}"
+                     style="width: 100%; height: 100%; object-fit: cover;"
+                     onerror="this.src='https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'">
+            </div>
+
+            <!-- Thumbnails strip -->
+            {% if prop.images and prop.images|length > 1 %}
+                <div style="display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                    {% for img in prop.images %}
+                        <img src="{{ img.image_url }}"
+                             alt="Thumbnail"
+                             style="width: 80px; height: 60px; object-fit: cover; border-radius: var(--radius-sm); cursor: pointer; border: 2px solid transparent; opacity: 0.8; transition: var(--transition);"
+                             onclick="document.getElementById('main-gallery-img').src=this.src;"
+                             onmouseover="this.style.opacity='1'; this.style.borderColor='var(--primary)';"
+                             onmouseout="this.style.opacity='0.8'; this.style.borderColor='transparent';">
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Booking / Action Card -->
+        <div>
+            <div class="glass-panel" style="padding: 2rem; border-radius: var(--radius-lg); position: sticky; top: 95px;">
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                    <span class="badge badge-{{ prop.gender_preference }}">
+                        <i class="fas {% if prop.gender_preference == 'female' %}fa-venus{% elif prop.gender_preference == 'male' %}fa-mars{% else %}fa-venus-mars{% endif %}"></i>
+                        {{ prop.gender_preference }} PG
+                    </span>
+                    <span class="badge badge-verified">
+                        <i class="fas fa-shield-check"></i> Verified Property
+                    </span>
+                </div>
+
+                <h1 style="font-size: 1.85rem; margin-bottom: 0.5rem;">{{ prop.title }}</h1>
+                <p style="font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 1.25rem;">
+                    <i class="fas fa-location-dot" style="color: var(--secondary);"></i>
+                    {{ prop.address_line }}, {{ prop.city }} ({{ prop.landmark }})
+                </p>
+
+                <div style="padding: 1.25rem 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); margin-bottom: 1.5rem; display: flex; align-items: baseline; justify-content: space-between;">
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Monthly Rent</span>
+                        <div style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #ffffff;">
+                            ₹{{ "{:,.0f}".format(prop.min_price) }} - ₹{{ "{:,.0f}".format(prop.max_price) }}
+                        </div>
+                    </div>
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Zero Brokerage</span>
+                </div>
+
+                <!-- Schedule Visit Action Form -->
+                <form action="{{ url_for('tenant.book_visit', property_id=prop.id) }}" method="POST" id="visit-booking-form">
+                    <h4 style="font-size: 1.05rem; margin-bottom: 0.85rem;">Schedule a Free In-Person Visit</h4>
+
+                    <div class="form-group">
+                        <label for="visit_date" class="form-label">Preferred Date</label>
+                        <input type="date" name="visit_date" id="visit_date" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="visit_time_slot" class="form-label">Time Slot</label>
+                        <select name="visit_time_slot" id="visit_time_slot" class="form-control">
+                            <option value="Morning (10:00 AM - 1:00 PM)">Morning (10:00 AM - 1:00 PM)</option>
+                            <option value="Afternoon (1:00 PM - 5:00 PM)">Afternoon (1:00 PM - 5:00 PM)</option>
+                            <option value="Evening (5:00 PM - 8:00 PM)">Evening (5:00 PM - 8:00 PM)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message" class="form-label">Message for Owner (Optional)</label>
+                        <input type="text" name="message" id="message" class="form-control" placeholder="e.g. Inquiring for single sharing room...">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 0.5rem;" id="submit-visit-btn">
+                        <i class="fas fa-calendar-check"></i> Request Free Visit
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Options & Available Beds -->
+    <div style="margin-bottom: 3.5rem;">
+        <h2 style="margin-bottom: 1.25rem;">Available Room Sharing Types</h2>
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Sharing Type</th>
+                        <th>Available Beds</th>
+                        <th>Air Conditioning</th>
+                        <th>Attached Bathroom</th>
+                        <th>Monthly Rent</th>
+                        <th>Deposit</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in prop.rooms %}
+                        <tr>
+                            <td>
+                                <strong style="color: #ffffff; text-transform: capitalize;">
+                                    {{ room.room_type.replace('_', ' ') }}
+                                </strong>
+                            </td>
+                            <td>
+                                <span class="badge {% if room.available_beds > 0 %}badge-verified{% else %}status-rejected{% endif %}">
+                                    {{ room.available_beds }} / {{ room.total_beds }} Beds
+                                </span>
+                            </td>
+                            <td>
+                                {% if room.has_ac %}
+                                    <span style="color: #34d399;"><i class="fas fa-check"></i> Yes</span>
+                                {% else %}
+                                    <span style="color: var(--text-muted);"><i class="fas fa-xmark"></i> No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if room.has_attached_bathroom %}
+                                    <span style="color: #34d399;"><i class="fas fa-check"></i> Yes</span>
+                                {% else %}
+                                    <span style="color: var(--text-muted);"><i class="fas fa-xmark"></i> Common</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong style="font-family: var(--font-heading); font-size: 1.15rem; color: #ffffff;">
+                                    ₹{{ "{:,.0f}".format(room.monthly_rent) }}
+                                </strong>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">/mo</span>
+                            </td>
+                            <td>₹{{ "{:,.0f}".format(room.security_deposit) }}</td>
+                            <td>
+                                <a href="#visit-booking-form" class="btn btn-secondary btn-sm" onclick="document.getElementById('message').value='Inquiring about {{ room.room_type }} room';">
+                                    Select
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- AI Review Insights Feature -->
+    {% if ai_summary %}
+    <div style="margin-bottom: 3.5rem;">
+        <div class="glass-panel" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(17, 24, 39, 0.8) 100%); border: 1px solid var(--border-accent); padding: 2.5rem; border-radius: var(--radius-lg);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; color: #ffffff;">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.35rem; color: #ffffff;">AI Review Summarizer</h3>
+                        <p style="font-size: 0.85rem;">Synthesized from all verified tenant feedback</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-surface); padding: 0.4rem 0.85rem; border-radius: var(--radius-full); border: 1px solid var(--border-light);">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Tenant Sentiment:</span>
+                    <strong style="color: var(--accent); font-size: 0.95rem;">{{ (ai_summary.sentiment_score * 100)|int }}% Positive</strong>
+                </div>
+            </div>
+
+            <p style="font-size: 1.05rem; line-height: 1.6; margin-bottom: 1.5rem; color: #e2e8f0; font-style: italic;">
+                "{{ ai_summary.summary or ai_summary.overall_summary }}"
+            </p>
+
+            <div class="grid-2" style="gap: 1.5rem;">
+                <!-- Pros -->
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); padding: 1.25rem; border-radius: var(--radius-md);">
+                    <h4 style="color: #34d399; font-size: 0.95rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="fas fa-thumbs-up"></i> Top Highlights (Pros)
+                    </h4>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem;">
+                        {% for pro in ai_summary.pros or ai_summary.pros_list %}
+                            <li style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                                <i class="fas fa-check" style="color: #34d399; margin-top: 0.25rem; font-size: 0.8rem;"></i>
+                                <span>{{ pro }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Cons -->
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); padding: 1.25rem; border-radius: var(--radius-md);">
+                    <h4 style="color: #f87171; font-size: 0.95rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="fas fa-circle-exclamation"></i> Things to Note (Cons)
+                    </h4>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem;">
+                        {% for con in ai_summary.cons or ai_summary.cons_list %}
+                            <li style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                                <i class="fas fa-info-circle" style="color: #f87171; margin-top: 0.25rem; font-size: 0.8rem;"></i>
+                                <span>{{ con }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Amenities Grid -->
+    <div style="margin-bottom: 3.5rem;">
+        <h2 style="margin-bottom: 1.25rem;">Facilities & Amenities</h2>
+        <div class="option-cards-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+            {% for amenity in prop.amenities %}
+                <div class="glass-panel" style="padding: 1.2rem; display: flex; align-items: center; gap: 0.85rem; border-radius: var(--radius-md);">
+                    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--primary-light); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                        <i class="fas {{ amenity.icon_code or 'fa-check' }}"></i>
+                    </div>
+                    <span style="font-size: 0.9rem; font-weight: 600; color: #ffffff;">{{ amenity.name }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Leaflet OpenStreetMap Location View -->
+    <div style="margin-bottom: 3.5rem;">
+        <h2 style="margin-bottom: 0.5rem;">Exact Location on Map</h2>
+        <p style="margin-bottom: 1rem;">Powered by Leaflet and OpenStreetMap geospatial mapping.</p>
+        <div id="leaflet-detail-map"></div>
+    </div>
+
+    <!-- Tenant Reviews & Feedback Form -->
+    <div style="margin-bottom: 4rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2>Tenant Reviews ({{ reviews|length }})</h2>
+        </div>
+
+        <!-- Add Review Form (for logged-in users) -->
+        {% if is_logged_in and user_role == 'tenant' %}
+            <div class="glass-panel" style="padding: 2rem; border-radius: var(--radius-lg); margin-bottom: 2rem;">
+                <h4 style="margin-bottom: 1rem;">Write a Verified Review</h4>
+                <form action="{{ url_for('tenant.submit_review', property_id=prop.id) }}" method="POST">
+                    <div class="grid-4" style="gap: 1rem; margin-bottom: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Overall Rating</label>
+                            <select name="rating_overall" class="form-control">
+                                <option value="5">★★★★★ (5/5)</option>
+                                <option value="4">★★★★☆ (4/5)</option>
+                                <option value="3">★★★☆☆ (3/5)</option>
+                                <option value="2">★★☆☆☆ (2/5)</option>
+                                <option value="1">★☆☆☆☆ (1/5)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cleanliness</label>
+                            <select name="rating_cleanliness" class="form-control">
+                                <option value="5">5/5 - Spotless</option>
+                                <option value="4">4/5 - Good</option>
+                                <option value="3">3/5 - Average</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Food Quality</label>
+                            <select name="rating_food" class="form-control">
+                                <option value="5">5/5 - Delicious</option>
+                                <option value="4">4/5 - Good</option>
+                                <option value="3">3/5 - Decent</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Safety & Security</label>
+                            <select name="rating_safety" class="form-control">
+                                <option value="5">5/5 - Very Safe</option>
+                                <option value="4">4/5 - Safe</option>
+                                <option value="3">3/5 - Standard</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Your Honest Review</label>
+                        <textarea name="comment" class="form-control" placeholder="Describe the food, Wi-Fi speed, warden behavior, and cleanliness..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Submit Review & Update AI Insights
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+
+        <!-- Reviews List -->
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for r in reviews %}
+                <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-md);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <img src="{{ r.author_avatar or '/static/images/default-avatar.png' }}"
+                                 style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;"
+                                 onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'">
+                            <div>
+                                <h4 style="font-size: 0.95rem; color: #ffffff;">{{ r.author_name }}</h4>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Verified Tenant</span>
+                            </div>
+                        </div>
+                        <div class="card-rating">
+                            <i class="fas fa-star"></i> {{ r.rating_overall }}.0
+                        </div>
+                    </div>
+                    <p style="font-size: 0.925rem; color: var(--text-secondary); line-height: 1.5;">
+                        {{ r.comment }}
+                    </p>
+                </div>
+            {% else %}
+                <p style="color: var(--text-muted);">No reviews written yet. Be the first to share your experience!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set minimum booking date to today
+        const dateInput = document.getElementById('visit_date');
+        if (dateInput) {
+            dateInput.min = new Date().toISOString().split('T')[0];
+        }
+
+        // Initialize Property Detail Leaflet Map
+        initDetailMap('leaflet-detail-map', {{ prop.latitude }}, {{ prop.longitude }}, "{{ prop.title|replace('"', '\\"') }}");
+    });
+</script>
+{% endblock %}

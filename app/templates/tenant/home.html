@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}AI-Powered PG & Room Finder | Smart Accommodation Search{% endblock %}
+
+{% block content %}
+<!-- Hero Section with AI Search -->
+<section style="position: relative; padding: 6rem 0 5rem; overflow: hidden; background: radial-gradient(circle at 50% 20%, rgba(99, 102, 241, 0.15) 0%, rgba(11, 15, 25, 0) 70%);">
+    <div class="container" style="text-align: center;">
+        <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bg-surface-elevated); border: 1px solid var(--border-light); padding: 0.4rem 1rem; border-radius: var(--radius-full); margin-bottom: 1.5rem;">
+            <span class="badge badge-ai"><i class="fas fa-sparkles"></i> AI 2.0</span>
+            <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Zero Brokerage • 100% Verified PGs & Rooms</span>
+        </div>
+
+        <h1 style="font-size: 3.25rem; max-width: 860px; margin: 0 auto 1.25rem; line-height: 1.15;">
+            Find Your Ideal PG or Room with <span style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI Precision</span>
+        </h1>
+
+        <p style="font-size: 1.15rem; max-width: 640px; margin: 0 auto 2.5rem; color: var(--text-secondary);">
+            Search in plain English, preview verified rooms on interactive Leaflet maps, and discover your next home with AI review summaries.
+        </p>
+
+        <!-- AI Natural Language Search Box -->
+        <form action="{{ url_for('tenant.search') }}" method="GET" class="ai-search-box" id="hero-ai-search-form">
+            <i class="fas fa-wand-magic-sparkles ai-search-icon"></i>
+            <input type="text"
+                   name="nl_query"
+                   id="nl-search-input"
+                   class="ai-search-input"
+                   placeholder="e.g. 'Looking for a single room girls PG in Koramangala with food under 12k'"
+                   autocomplete="off">
+            <button type="submit" class="btn btn-primary" id="hero-search-submit-btn">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </form>
+
+        <!-- Quick AI Prompt Suggestions -->
+        <div style="margin-top: 1.25rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fas fa-lightbulb"></i> Try asking:</span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="setSearchPrompt('Single room in Koramangala with food for girls under 15k')">
+                Girls PG in Koramangala under 15k
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="setSearchPrompt('Hinjewadi Pune boys PG with AC under 8000')">
+                Boys PG in Hinjewadi Pune &lt; 8k
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="setSearchPrompt('Whitefield unisex coliving with gym and wifi')">
+                Whitefield Unisex Coliving
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- AI Recommended PGs Section (if available) -->
+{% if recommendations %}
+<section class="section" style="background: rgba(17, 24, 39, 0.4); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+    <div class="container">
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+                    <span class="badge badge-ai"><i class="fas fa-brain"></i> AI Match Engine</span>
+                </div>
+                <h2>Recommended For You</h2>
+                <p>Personalized selections ranked by budget, amenity score, and tenant ratings.</p>
+            </div>
+            <a href="{{ url_for('tenant.search') }}" class="btn btn-secondary btn-sm">
+                View All Matches <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="grid-4">
+            {% for prop in recommendations %}
+                {% include 'components/property_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Featured PGs & Rooms -->
+<section class="section">
+    <div class="container">
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h2>Verified Accommodations</h2>
+                <p>Curated, owner-verified paying guest hostels and shared apartments.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="{{ url_for('tenant.search') }}?gender=female" class="btn btn-secondary btn-sm">Girls PGs</a>
+                <a href="{{ url_for('tenant.search') }}?gender=male" class="btn btn-secondary btn-sm">Boys PGs</a>
+                <a href="{{ url_for('tenant.search') }}?gender=unisex" class="btn btn-secondary btn-sm">Co-living</a>
+            </div>
+        </div>
+
+        <div class="grid-3">
+            {% for prop in featured_properties %}
+                {% include 'components/property_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Popular Tech Hub Cities -->
+<section class="section" style="background: var(--bg-surface);">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+            <h2>Explore by Location</h2>
+            <p>Popular destinations for students and tech professionals</p>
+        </div>
+
+        <div class="grid-4">
+            <a href="{{ url_for('tenant.search') }}?city=Bangalore" class="glass-panel" style="padding: 1.5rem; text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(99, 102, 241, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--primary);">
+                    <i class="fas fa-city"></i>
+                </div>
+                <h3 style="font-size: 1.15rem; color: #ffffff;">Bangalore</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Koramangala, HSR, Whitefield</span>
+            </a>
+
+            <a href="{{ url_for('tenant.search') }}?city=Pune" class="glass-panel" style="padding: 1.5rem; text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(6, 182, 212, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--secondary);">
+                    <i class="fas fa-tree-city"></i>
+                </div>
+                <h3 style="font-size: 1.15rem; color: #ffffff;">Pune</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Hinjewadi, Wakad, Baner</span>
+            </a>
+
+            <a href="{{ url_for('tenant.search') }}?city=Hyderabad" class="glass-panel" style="padding: 1.5rem; text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--accent);">
+                    <i class="fas fa-monument"></i>
+                </div>
+                <h3 style="font-size: 1.15rem; color: #ffffff;">Hyderabad</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Gachibowli, Madhapur, Hitec City</span>
+            </a>
+
+            <a href="{{ url_for('tenant.search') }}?city=Delhi" class="glass-panel" style="padding: 1.5rem; text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--warning);">
+                    <i class="fas fa-landmark"></i>
+                </div>
+                <h3 style="font-size: 1.15rem; color: #ffffff;">Delhi NCR</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Noida, Gurgaon, South Delhi</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Owner Call to Action -->
+<section class="section">
+    <div class="container">
+        <div class="glass-panel" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%); border: 1px solid var(--border-accent); padding: 3.5rem; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2rem;">
+            <div style="max-width: 620px;">
+                <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; margin-bottom: 0.75rem;">
+                    <i class="fas fa-key"></i> For PG & Property Owners
+                </span>
+                <h2 style="font-size: 2.2rem; margin-bottom: 0.75rem;">Are you a PG or Flat Owner?</h2>
+                <p style="font-size: 1.05rem;">
+                    List your property in minutes, set coordinates with our interactive Leaflet pin picker, receive direct visit requests from verified tenants, and experience zero brokerage fees.
+                </p>
+            </div>
+            <a href="{{ url_for('auth.register') }}?role=owner" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i> List Your Property Now
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function setSearchPrompt(promptText) {
+        const input = document.getElementById('nl-search-input');
+        input.value = promptText;
+        input.focus();
+    }
+</script>
+{% endblock %}

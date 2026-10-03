@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile | AI-Powered PG & Room Finder{% endblock %}
+
+{% block content %}
+<div class="container section" style="max-width: 720px;">
+    <div class="dashboard-header">
+        <div>
+            <h1>Account Settings</h1>
+            <p>Manage your account profile and contact details.</p>
+        </div>
+        <span class="role-pill role-{{ user.role }}" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+            {{ user.role|upper }} ACCOUNT
+        </span>
+    </div>
+
+    <div class="glass-panel" style="padding: 2.5rem; border-radius: var(--radius-lg);">
+        <form method="POST" action="{{ url_for('auth.profile') }}">
+            <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
+                <img src="{{ user.avatar_url or '/static/images/default-avatar.png' }}"
+                     alt="{{ user.full_name }}"
+                     style="width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);"
+                     onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'">
+                <div>
+                    <h3 style="font-size: 1.25rem; color: #ffffff;">{{ user.full_name }}</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">{{ user.email }}</p>
+                    <span class="badge badge-verified" style="margin-top: 0.35rem;">
+                        <i class="fas fa-check-circle"></i> Active User
+                    </span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="full_name" class="form-label">Full Name</label>
+                <input type="text" name="full_name" id="full_name" class="form-control" value="{{ user.full_name }}" required>
+            </div>
+
+            <div class="grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address (Read-only)</label>
+                    <input type="email" id="email" class="form-control" value="{{ user.email }}" disabled style="opacity: 0.7; cursor: not-allowed;">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" class="form-label">Contact Phone</label>
+                    <input type="tel" name="phone" id="phone" class="form-control" value="{{ user.phone }}" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+                <i class="fas fa-save"></i> Save Profile Changes
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+<div class="property-card" id="property-card-{{ prop.id }}">
+    <!-- Media Section -->
+    <div class="card-media">
+        <img src="{{ prop.cover_image or 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80' }}"
+             alt="{{ prop.title }}"
+             class="card-img"
+             loading="lazy"
+             onerror="this.src='https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'">
+
+        <!-- Overlay Badges -->
+        <div class="card-tags">
+            <span class="badge badge-{{ prop.gender_preference }}">
+                <i class="fas {% if prop.gender_preference == 'female' %}fa-venus{% elif prop.gender_preference == 'male' %}fa-mars{% else %}fa-venus-mars{% endif %}"></i>
+                {{ prop.gender_preference }}
+            </span>
+            {% if prop.food_available %}
+                <span class="badge" style="background: rgba(16, 185, 129, 0.25); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);">
+                    <i class="fas fa-utensils"></i> Food Inc.
+                </span>
+            {% endif %}
+        </div>
+
+        <!-- Wishlist Button -->
+        <button class="card-favorite-btn {% if is_saved %}saved{% endif %}"
+                data-property-id="{{ prop.id }}"
+                aria-label="Save to Wishlist"
+                title="Save to Wishlist">
+            <i class="{% if is_saved %}fas{% else %}far{% endif %} fa-heart"></i>
+        </button>
+
+        <!-- AI Match Indicator if present -->
+        {% if prop.match_score %}
+            <div class="card-match-badge">
+                <i class="fas fa-wand-magic-sparkles"></i> {{ prop.match_score }}% AI Match
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Content Section -->
+    <div class="card-content">
+        <div class="card-header">
+            <h3 class="card-title">
+                <a href="{{ url_for('tenant.property_detail', slug=prop.slug) }}">{{ prop.title }}</a>
+            </h3>
+            <div class="card-rating">
+                <i class="fas fa-star"></i> {{ prop.avg_rating or '4.5' }}
+            </div>
+        </div>
+
+        <div class="card-location">
+            <i class="fas fa-location-dot" style="color: var(--secondary);"></i>
+            <span>{{ prop.landmark or prop.address_line }}, {{ prop.city }}</span>
+        </div>
+
+        <!-- Amenities Preview -->
+        <div class="card-amenities">
+            {% if prop.amenities %}
+                {% for am in prop.amenities[:3] %}
+                    <span class="amenity-chip">
+                        <i class="fas {{ am.icon_code or 'fa-check' }}"></i> {{ am.name.split(' ')[0] }}
+                    </span>
+                {% endfor %}
+                {% if prop.amenities|length > 3 %}
+                    <span class="amenity-chip">+{{ prop.amenities|length - 3 }} more</span>
+                {% endif %}
+            {% else %}
+                <span class="amenity-chip"><i class="fas fa-wifi"></i> Wi-Fi</span>
+                <span class="amenity-chip"><i class="fas fa-bolt"></i> Backup</span>
+                <span class="amenity-chip"><i class="fas fa-shield-alt"></i> CCTV</span>
+            {% endif %}
+        </div>
+
+        <!-- Card Footer with Rent and Button -->
+        <div class="card-footer">
+            <div class="card-price">
+                <span class="price-label">Starts at</span>
+                <div class="price-value">
+                    ₹{{ "{:,.0f}".format(prop.min_price) }}<span>/mo</span>
+                </div>
+            </div>
+            <a href="{{ url_for('tenant.property_detail', slug=prop.slug) }}" class="btn btn-primary btn-sm">
+                View Details <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>

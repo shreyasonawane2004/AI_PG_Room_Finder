@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Tenant Inquiries & Visit Requests | RoomFinder AI{% endblock %}
+
+{% block content %}
+<div class="container section">
+    <div class="dashboard-header">
+        <div>
+            <h1>Tenant Visit Requests & Leads</h1>
+            <p>Review and accept schedule requests from interested tenants.</p>
+        </div>
+        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Dashboard
+        </a>
+    </div>
+
+    {% if inquiries %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Tenant Info</th>
+                        <th>Target Property</th>
+                        <th>Requested Date & Slot</th>
+                        <th>Tenant Note</th>
+                        <th>Current Status</th>
+                        <th>Owner Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inq in inquiries %}
+                        <tr>
+                            <td>
+                                <strong style="color: #ffffff;">{{ inq.tenant_name }}</strong>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                                    <i class="fas fa-phone"></i> {{ inq.tenant_phone }}
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ inq.tenant_email }}</div>
+                            </td>
+                            <td>
+                                <strong>{{ inq.property_title }}</strong>
+                                <div style="font-size: 0.75rem; color: var(--accent);">
+                                    {{ inq.room_type.replace('_', ' ') if inq.room_type else 'General Visit' }}
+                                </div>
+                            </td>
+                            <td>
+                                <strong style="color: #ffffff;">{{ inq.visit_date }}</strong>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ inq.visit_time_slot }}</div>
+                            </td>
+                            <td style="font-size: 0.85rem; max-width: 200px;">
+                                {{ inq.message or 'No specific message.' }}
+                            </td>
+                            <td>
+                                <span class="status-chip status-{{ inq.status }}">
+                                    {{ inq.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('owner.update_inquiry_status', inquiry_id=inq.id) }}" method="POST" style="display: flex; gap: 0.4rem; align-items: center;">
+                                    {% if inq.status == 'pending' %}
+                                        <button type="submit" name="status" value="confirmed" class="btn btn-accent btn-sm">
+                                            <i class="fas fa-check"></i> Accept
+                                        </button>
+                                        <button type="submit" name="status" value="declined" class="btn btn-secondary btn-sm" style="color: var(--danger);">
+                                            <i class="fas fa-xmark"></i> Decline
+                                        </button>
+                                    {% elif inq.status == 'confirmed' %}
+                                        <button type="submit" name="status" value="completed" class="btn btn-secondary btn-sm">
+                                            <i class="fas fa-clipboard-check"></i> Mark Completed
+                                        </button>
+                                    {% else %}
+                                        <span style="font-size: 0.8rem; color: var(--text-muted);">Archived</span>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="glass-panel" style="padding: 3.5rem; text-align: center; border-radius: var(--radius-lg);">
+            <i class="fas fa-inbox" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+            <h3>No Inquiries Right Now</h3>
+            <p>Your listings are active and awaiting new visit inquiries.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

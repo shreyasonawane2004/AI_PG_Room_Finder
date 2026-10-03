@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Owner Dashboard | RoomFinder AI{% endblock %}
+
+{% block content %}
+<div class="container section">
+    <div class="dashboard-header">
+        <div>
+            <h1>Owner Management Dashboard</h1>
+            <p>Monitor your listed properties, room availability, and prospective tenant visits.</p>
+        </div>
+        <a href="{{ url_for('owner.add_property') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> List New Property
+        </a>
+    </div>
+
+    <!-- Metric Stat Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3>{{ properties|length }}</h3>
+                <p>Properties Listed</p>
+            </div>
+            <div class="stat-icon icon-purple">
+                <i class="fas fa-building"></i>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3>{{ total_rooms }}</h3>
+                <p>Total Room Types</p>
+            </div>
+            <div class="stat-icon icon-cyan">
+                <i class="fas fa-door-open"></i>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3>{{ total_available_beds }}</h3>
+                <p>Available Beds</p>
+            </div>
+            <div class="stat-icon icon-green">
+                <i class="fas fa-bed"></i>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3>{{ pending_inquiries_count }}</h3>
+                <p>Pending Inquiries</p>
+            </div>
+            <div class="stat-icon icon-amber">
+                <i class="fas fa-envelope-open-text"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Sections: Recent Inquiries -->
+    <div style="margin-bottom: 3rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <h2>Recent Tenant Inquiries & Visits</h2>
+            <a href="{{ url_for('owner.inquiries') }}" class="btn btn-secondary btn-sm">
+                View All Inquiries
+            </a>
+        </div>
+
+        {% if inquiries %}
+            <div class="table-container">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Tenant Name</th>
+                            <th>Property</th>
+                            <th>Visit Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inq in inquiries[:5] %}
+                            <tr>
+                                <td>
+                                    <strong style="color: #ffffff;">{{ inq.tenant_name }}</strong>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ inq.tenant_phone }}</div>
+                                </td>
+                                <td>{{ inq.property_title }}</td>
+                                <td>{{ inq.visit_date }} ({{ inq.visit_time_slot }})</td>
+                                <td>
+                                    <span class="status-chip status-{{ inq.status }}">
+                                        {{ inq.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if inq.status == 'pending' %}
+                                        <form action="{{ url_for('owner.update_inquiry_status', inquiry_id=inq.id) }}" method="POST" style="display: inline-flex; gap: 0.35rem;">
+                                            <button type="submit" name="status" value="confirmed" class="btn btn-accent btn-sm">
+                                                <i class="fas fa-check"></i> Accept
+                                            </button>
+                                            <button type="submit" name="status" value="declined" class="btn btn-secondary btn-sm" style="color: var(--danger);">
+                                                <i class="fas fa-xmark"></i> Decline
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span style="font-size: 0.8rem; color: var(--text-muted);">Resolved</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="glass-panel" style="padding: 2rem; text-align: center; border-radius: var(--radius-md);">
+                <p style="color: var(--text-muted);">No inquiries received yet. Once tenants request visits, they will show up here.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Active Listings Overview -->
+    <div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <h2>My Properties Overview</h2>
+            <a href="{{ url_for('owner.properties') }}" class="btn btn-secondary btn-sm">
+                Manage Listings
+            </a>
+        </div>
+
+        {% if properties %}
+            <div class="grid-3">
+                {% for prop in properties[:3] %}
+                    <div class="glass-panel" style="padding: 1.25rem; border-radius: var(--radius-md);">
+                        <img src="{{ prop.cover_image or 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80' }}"
+                             style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 0.75rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+                            <span class="status-chip status-{{ prop.status }}">{{ prop.status }}</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">{{ prop.city }}</span>
+                        </div>
+                        <h4 style="font-size: 1.05rem; margin-bottom: 0.5rem; color: #ffffff;">{{ prop.title }}</h4>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-secondary);">
+                            <span>Rooms: <strong>{{ prop.room_count }}</strong></span>
+                            <span>Available Beds: <strong>{{ prop.total_available_beds }}</strong></span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="glass-panel" style="padding: 2.5rem; text-align: center; border-radius: var(--radius-md);">
+                <i class="fas fa-home" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                <h4 style="margin-bottom: 0.5rem;">You haven't added any listings yet</h4>
+                <p style="margin-bottom: 1rem;">Start receiving tenant inquiries by listing your PG accommodation.</p>
+                <a href="{{ url_for('owner.add_property') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Add Your First Property
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
